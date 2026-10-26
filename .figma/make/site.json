@@ -1,0 +1,10 @@
+{
+  "description": "Personal productivity dashboard combining weather updates, calendar events, and task management to help users stay organized and efficient daily.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
