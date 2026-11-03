@@ -2,9 +2,9 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 import { hanbokShops } from "@/data/hanbok";
 import { subtitles } from "@/data/subtitles";
 import { genSessionCode } from "@/lib/format";
+import { runAsk } from "@/lib/askStore";
 import type { HbBooking, HbRecord, ScreenId } from "@/types";
 
-// 앱 전체에서 같이 쓰는 상태(현재 화면, 토스트, 예약 목록 등)와 이동 함수 목록
 function useAppState() {
   const [screen, setScreen] = useState<ScreenId>("T-00");
   const [history, setHistory] = useState<ScreenId[]>([]);
@@ -50,11 +50,16 @@ function useAppState() {
   const [bookings, setBookings] = useState<HbRecord[]>([{ code: "HB-4730", shop: "Gungmoon Hanbok", date: "Tue, Oct 6", time: "10:00", people: 2, pickup: "Tue, Oct 6 · 10:00", duration: "Full day", pickupPlace: "Shop near Gyeongbokgung Station, Exit 5", total: 61000, status: "upcoming" }]);
   const streamRef = useRef<HTMLDivElement>(null);
 
+  // 지도 핀이나 목록에서 고른 건물의 id (건물 상세 화면이 이 id 로 정보를 찾음)
+  const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
+
   const guideMode = screen.startsWith("G-");
   const onboarding = ["T-00", "T-01", "T-02", "T-65A"].includes(screen);
   const cameraScreen = ["T-20", "T-21", "T-22"].includes(screen);
 
   function go(next: ScreenId, keepIndex = false) {
+    // 지도·목록(goToPlace)이 아닌 곳에서 건물 상세로 오면 선택을 비워서 샘플 화면을 보여줌
+    if (next === "T-12") setSelectedPlaceId(null);
     setHistory((items) => [...items, screen]);
     setScreen(next);
     setOpenTour(null);
@@ -67,8 +72,14 @@ function useAppState() {
     go(next);
   }
 
+  // 건물을 골라서 상세 화면으로 갈 때 사용 (지도 핀, 건물 목록)
+  function goToPlace(placeId: string, next: ScreenId = "T-12") {
+    go(next);                     // go 는 T-12 로 올 때 선택을 비우고
+    setSelectedPlaceId(placeId);  // 바로 이어서 다시 기록한다 (나중에 호출한 값이 적용됨)
+  }
+
   function setLiveActive(on: boolean) {
-    setSessionLive(on);
+    setSessionLive(true);
   }
 
   function startSession() {
@@ -119,109 +130,28 @@ function useAppState() {
     go("T-61");
   }
 
+  // 질문을 서버로 보냄, 기다리는 동안은 T-41 에서 로딩을 보여 주고
+  // 답이 오면 T-41(답변) / T-42(근거 없음) / T-43(길 묻기) / T-44(편의시설) / S-06(요청 과다) 중 맞는 화면으로 바꿉니다.
   function ask(question: string) {
-    setChatQuestion(question);
+    const q = question.trim();
+    if (!q) return;
+    setChatQuestion(q);
     setQuery("");
-    if (question.toLowerCase().includes("gyeonghoeru") || question.toLowerCase().includes("king sleep") || question.toLowerCase().includes("painting behind")) go("T-41");
-    else go("T-42");
+    if (screen !== "T-41") go("T-41");
+    runAsk(q, (next) => setScreen((current) => (current.startsWith("T-4") || current === "S-06" ? next : current)));
   }
 
   return {
-    screen,
-    setScreen,
-    history,
-    setHistory,
-    indexOpen,
-    setIndexOpen,
-    noun,
-    setNoun,
-    audio,
-    setAudio,
-    audioPlaying,
-    setAudioPlaying,
-    confidence,
-    setConfidence,
-    guideConsent,
-    setGuideConsent,
-    micOn,
-    setMicOn,
-    original,
-    setOriginal,
-    fontSize,
-    setFontSize,
-    subtitleCount,
-    setSubtitleCount,
-    query,
-    setQuery,
-    chatQuestion,
-    setChatQuestion,
-    sessionLive,
-    setSessionLive,
-    liveSec,
-    setLiveSec,
-    guideSec,
-    setGuideSec,
-    openTour,
-    setOpenTour,
-    langs,
-    setLangs,
-    duration,
-    setDuration,
-    hanbokHidden,
-    setHanbokHidden,
-    servicesOpen,
-    setServicesOpen,
-    guideAuthed,
-    setGuideAuthed,
-    toast,
-    setToast,
-    routeTime,
-    setRouteTime,
-    routeInterests,
-    setRouteInterests,
-    statesOpen,
-    setStatesOpen,
-    setSettingsNote,
-    hanbokFilters,
-    setHF,
-    shopIdx,
-    setShopIdx,
-    bk,
-    setBk,
-    payMethod,
-    setPayMethod,
-    paying,
-    setPaying,
-    newCode,
-    setNewCode,
-    hbSave,
-    setHbSave,
-    qrCode,
-    setQrCode,
-    sessionCode,
-    setSessionCode,
-    joined,
-    setJoined,
-    openBk,
-    setOpenBk,
-    cancelAsk,
-    setCancelAsk,
-    lookupMsg,
-    setLookupMsg,
-    bookings,
-    setBookings,
-    streamRef,
-    guideMode,
-    onboarding,
-    cameraScreen,
-    go,
-    jump,
-    setLiveActive,
-    startSession,
-    notify,
-    back,
-    openShop,
-    ask,
+    screen, setScreen, history, setHistory, indexOpen, setIndexOpen, noun, setNoun, audio, setAudio, audioPlaying, setAudioPlaying,
+    confidence, setConfidence, guideConsent, setGuideConsent, micOn, setMicOn, original, setOriginal, fontSize, setFontSize,
+    subtitleCount, setSubtitleCount, query, setQuery, chatQuestion, setChatQuestion, sessionLive, setSessionLive, liveSec, setLiveSec,
+    guideSec, setGuideSec, openTour, setOpenTour, langs, setLangs, duration, setDuration, hanbokHidden, setHanbokHidden,
+    servicesOpen, setServicesOpen, guideAuthed, setGuideAuthed, toast, setToast, routeTime, setRouteTime, routeInterests, setRouteInterests,
+    statesOpen, setStatesOpen, setSettingsNote, hanbokFilters, setHF, shopIdx, setShopIdx, bk, setBk, payMethod, setPayMethod,
+    paying, setPaying, newCode, setNewCode, hbSave, setHbSave, qrCode, setQrCode, sessionCode, setSessionCode, joined, setJoined,
+    openBk, setOpenBk, cancelAsk, setCancelAsk, lookupMsg, setLookupMsg, bookings, setBookings, streamRef, guideMode, onboarding,
+    cameraScreen, go, jump, setLiveActive, startSession, notify, back, openShop, ask,
+    selectedPlaceId, setSelectedPlaceId, goToPlace
   };
 }
 

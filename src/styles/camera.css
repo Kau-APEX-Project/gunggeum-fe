@@ -1,0 +1,28 @@
+/* 카메라 화면(T-20~T-22) 전용 스타일. 색은 tokens.css 의 토큰만 사용 */
+.camera-screen.cam-live:after { content: none; }
+
+.cam-photo { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; object-fit: cover; }
+.cam-dim { position: absolute; inset: 0; z-index: 1; background: color-mix(in srgb, var(--color-ink) 45%, transparent); }
+.cam-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+.cam-status { position: absolute; z-index: 3; left: 24px; right: 24px; bottom: 126px; margin: 0; text-align: center; font-size: 12px; line-height: 1.4; }
+.cam-retry { position: absolute; z-index: 3; left: 50%; transform: translateX(-50%); bottom: 156px; color: var(--color-on-dark); border: 1px solid var(--color-on-dark); border-radius: 8px; padding: 7px 14px; font-size: 12px; font-weight: 700; }
+.cam-gallery { position: absolute; z-index: 3; left: 26px; bottom: 62px; color: var(--color-on-dark); text-decoration: underline; font-size: 12px; font-weight: 700; }
+.cam-gallery:disabled, .shutter:disabled { opacity: .45; cursor: not-allowed; }
+
+.cam-h { margin: 0 0 4px; font-size: 18px; }
+.cam-sub { margin: 4px 0 14px; font-size: 12px; }
+.cam-note { margin: 8px 0 0; font-size: 10px; color: var(--color-gray); }
+.cam-warning { margin: 6px 0 12px; padding: 9px 11px; border: 1px solid var(--color-primary); border-radius: 8px; color: var(--color-primary); font-size: 12px; font-weight: 700; line-height: 1.4; }
+.cam-link { display: block; margin: 6px auto 0; font-size: 13px; }
+
+.cam-top-card { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 10px; border: 1px solid var(--color-ink); border-radius: 12px; margin-bottom: 8px; }
+.cam-top-card .photo-box { width: 104px; height: 84px; flex: none; }
+.cam-card-text { flex: 1; min-width: 0; }
+.cam-card-text strong { display: block; font-size: 17px; line-height: 1.25; }
+.cam-card-text small { font-size: 11px; }
+.cam-score { font-size: 20px; font-weight: 800; flex: none; }
+.cam-small-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.cam-small { text-align: left; min-width: 0; padding: 8px 10px; border: 1px solid var(--color-line); border-radius: 8px; }
+.cam-small strong { display: block; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cam-small small { font-size: 10px; }

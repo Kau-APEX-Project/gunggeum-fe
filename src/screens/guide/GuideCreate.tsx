@@ -1,18 +1,46 @@
+import { useState } from "react";
+import "@/styles/connect.css";
 import { Button } from "@/components/ui/Button";
-import { guideLangs } from "@/data/guide";
-import { genSessionCode } from "@/lib/format";
-import { GuideBrand } from "@/screens/guide/GuideBrand";
 import { useApp } from "@/context/AppContext";
+import { createSession } from "@/lib/api";
+import { ApiError, sessionErrorText } from "@/lib/apiTypes";
+import { saveSession } from "@/lib/sessionStore";
+import { GuideBrand } from "@/screens/guide/GuideBrand";
 
+// G-01 세션 만들기. 기능명세서 v0.3 기준: 제목(선택), 가이드 접근 코드, 원본 언어(한국어 고정), 음성 미저장 동의.
 export function GuideCreate() {
-  const { guideConsent, setGuideConsent, langs, setLangs, duration, setDuration, setSessionCode, go, startSession } = useApp();
+  const { guideConsent, setGuideConsent, go } = useApp();
+  const [title, setTitle] = useState("Afternoon Palace Tour");
+  const [accessCode, setAccessCode] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [codeError, setCodeError] = useState(false); // 접근 코드가 틀림 (403)
+  const [notice, setNotice] = useState("");           // 그 밖의 오류 문구
+
+  async function create() {
+    setBusy(true);
+    setCodeError(false);
+    setNotice("");
+    try {
+      const cleanTitle = title.trim();
+      const s = await createSession({ consent: true, accessCode: accessCode.trim(), title: cleanTitle || undefined });
+      saveSession({ code: s.code, joinUrl: s.joinUrl, guideToken: s.guideToken, title: cleanTitle || "Palace tour", startedAt: s.startedAt });
+      go("G-02");
+    } catch (e) {
+      const kind = e instanceof ApiError ? e.kind : "network";
+      if (kind === "forbidden") setCodeError(true);
+      else setNotice(sessionErrorText(kind));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return <div className="guide-screen compact screen-pad"><GuideBrand /><h1>Create interpretation session</h1><p>Create an official interpretation session. Tourists join from the Live Tour lobby while it is live.</p>
-    <label className="field-label">Tour title<input defaultValue="Afternoon Palace Tour" /></label>
-    <div className="two-col"><label className="field-label">Tour date<input type="date" defaultValue="2026-10-05" /></label><label className="field-label">Start time<input type="time" defaultValue="14:00" /></label></div>
-    <div className="field-label">Expected duration<div className="chips">{["60 min", "90 min", "120 min"].map((d) => <button key={d} className={duration === d ? "selected" : ""} onClick={() => setDuration(d)}>{d}</button>)}</div></div>
+    <label className="field-label">Tour title (optional)<input value={title} maxLength={100} onChange={(e) => setTitle(e.target.value)} /></label>
+    <label className="field-label">Guide access code<input type="password" autoComplete="off" placeholder="Enter the code you were given" value={accessCode} onChange={(e) => { setAccessCode(e.target.value); setCodeError(false); }} /></label>
+    {codeError && <p className="field-error" role="alert">The guide access code is incorrect.</p>}
     <div className="field-label">Source language<div className="fixed-field">Korean (한국어) <span>Fixed</span></div></div>
-    <div className="field-label">Interpretation languages<div className="chips wrap">{guideLangs.map((l) => <button key={l} className={langs.includes(l) ? "selected" : ""} onClick={() => setLangs(langs.includes(l) ? langs.filter((x) => x !== l) : [...langs, l])}>{l}</button>)}</div></div>
     <label className="consent"><input type="checkbox" checked={guideConsent} onChange={(e) => setGuideConsent(e.target.checked)} /><span>I agree that my voice is converted to text and <strong>NOT stored.</strong></span></label>
     <p className="privacy-copy">Your speech is transcribed and translated in real time, then discarded. No audio recordings are kept; only subtitle text is shown to tourists during the session.</p>
-    <div className="flow-buttons"><Button disabled={!guideConsent || langs.length === 0} onClick={() => { setSessionCode(genSessionCode()); startSession(); go("G-02"); }}>Create session</Button><button className="text-button" onClick={() => go("G-05")}>Back to dashboard</button></div></div>;
+    {notice && <p className="form-notice" role="alert">{notice}</p>}
+    <div className="flow-buttons"><Button disabled={!guideConsent || !accessCode.trim() || busy} onClick={create}>{busy ? "Creating…" : "Create session"}</Button><button className="text-button" onClick={() => go("G-05")}>Back to dashboard</button></div></div>;
 }

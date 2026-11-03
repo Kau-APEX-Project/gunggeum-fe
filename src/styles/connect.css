@@ -1,0 +1,45 @@
+/* 서버 연결 작업(질의응답·카드·해설사 세션)에서 새로 생긴 화면 요소의 스타일. 색은 tokens.css 의 토큰만 사용 */
+
+/* ---------- 질의응답 ---------- */
+.chat-screen .chat-body { padding-bottom: 72px; }
+.chat-screen .bot-copy { flex: 1; min-width: 0; }
+.chat-screen .bot-copy p { margin: 0 0 8px; white-space: pre-line; }
+.chat-screen .bot-copy p:last-child { margin-bottom: 0; }
+
+.ask-loading { display: flex; align-items: center; gap: 9px; font-size: 11px; color: var(--color-gray); min-height: 27px; }
+.ask-dots { display: inline-flex; gap: 4px; }
+.ask-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--color-ink); animation: ask-dot 1.2s ease-in-out infinite; }
+.ask-dots i:nth-child(2) { animation-delay: .2s; }
+.ask-dots i:nth-child(3) { animation-delay: .4s; }
+@keyframes ask-dot { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+
+.ask-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+.ask-btn { border: 1px solid var(--color-gray); border-radius: 8px; padding: 8px 12px; font-size: 11px; font-weight: 700; background: var(--color-bg); color: var(--color-ink); }
+
+/* 지도 안내는 준비 중 (T-43, T-44) */
+.map-soon { margin-top: 10px; min-height: 150px; border: 1px solid var(--color-line); border-radius: 12px; padding: 14px 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center;
+  background-color: var(--color-map); background-image: linear-gradient(28deg, transparent 44%, var(--color-map-road) 45%, var(--color-map-road) 51%, transparent 52%); }
+.map-soon strong { font-size: 12px; }
+.map-soon small { font-size: 10px; color: var(--color-ink); }
+
+/* 경로 만드는 중 (T-14 → T-15) */
+.route-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; min-height: 70%; font-size: 13px; }
+
+/* ---------- 고유명사 카드 시트 ---------- */
+.bottom-sheet.card-sheet { max-height: 84%; overflow-y: auto; }
+.card-sheet .sheet-photo { overflow: hidden; }
+.card-sheet .sheet-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo-caption { margin: -8px 0 12px; font-size: 9px; color: var(--color-gray); }
+.card-status { font-size: 12px; margin: 24px 0; text-align: center; }
+.read-more { margin-top: 6px; color: var(--color-ink); font-weight: 700; font-size: 11px; text-decoration: underline; padding: 4px 0; }
+.card-sheet p { white-space: pre-line; }
+
+/* ---------- 해설사 모드 ---------- */
+.field-error { margin: -13px 0 16px; color: var(--color-primary); font-size: 11px; font-weight: 700; }
+.form-notice { margin: 12px 0 0; padding: 9px 11px; border: 1px solid var(--color-primary); border-radius: 8px; color: var(--color-primary); font-size: 11px; font-weight: 700; line-height: 1.4; }
+.session-code { margin-top: 8px; padding: 10px 20px; border: 1px solid var(--color-ink); background: var(--color-surface); font-size: 36px; font-weight: 800; letter-spacing: 2px; font-variant-numeric: tabular-nums; }
+.console-actions .secondary-action { border: 1px solid var(--color-gray); background: var(--color-bg); color: var(--color-ink); }
+
+/* ---------- 라이브 투어 입구 (T-30) ---------- */
+.lobby-actions { gap: 8px; align-items: stretch; }
+.lobby-actions .availability-note { margin-top: 6px; }

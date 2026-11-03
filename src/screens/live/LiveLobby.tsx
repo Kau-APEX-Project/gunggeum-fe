@@ -1,6 +1,8 @@
+import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { subtitles } from "@/data/subtitles";
 import { useApp } from "@/context/AppContext";
+import "@/styles/connect.css";
 
 export function LiveLobby() {
   const { sessionLive, openTour, setOpenTour, go } = useApp();
@@ -16,6 +18,6 @@ export function LiveLobby() {
         {openTour === i && <p className="tour-detail">Starts at {time} · led by {guide} in Korean. Live subtitles open when the guide starts the session — come back then and tap “Join live tour”.</p>}
       </div>)}
     </div>
-    <div className="lobby-actions"><p className="availability-note">Live interpretation is available only during an active official guided tour.</p></div>
+    <div className="lobby-actions"><Button onClick={() => go("T-31")}><Icon name="camera" /> Scan session QR</Button><Button secondary onClick={() => go("T-31")}>Join demo session</Button><p className="availability-note">Live interpretation is available only during an active official guided tour.</p></div>
   </div>;
 }

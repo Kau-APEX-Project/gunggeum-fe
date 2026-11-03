@@ -59,7 +59,9 @@ export function ScreenRouter() {
     case "T-65A": return <HanbokQrFull />;
     case "T-40": return <AskStart />;
     case "T-41": return <Chat />;
-    case "T-42": return <Chat noEvidence />;
+    case "T-42": return <Chat mode="noEvidence" />;
+    case "T-43": return <Chat mode="route" />;
+    case "T-44": return <Chat mode="amenity" />;
     case "T-50": return <Notices />;
     case "T-51": return <Passport />;
     case "G-00": return <GuideLogin />;
@@ -73,5 +75,6 @@ export function ScreenRouter() {
     case "S-03": return <MapHome state="gps" />;
     case "S-04": return <LiveSubtitles state="mic" />;
     case "S-05": return <CameraDenied />;
+    case "S-06": return <Chat mode="rateLimited" />;
   }
 }
