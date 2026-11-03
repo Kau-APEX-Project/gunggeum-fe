@@ -1,6 +1,7 @@
 import { Icon } from "@/components/ui/Icon";
 import { MapView } from "@/screens/map/MapView";
 import { useApp } from "@/context/AppContext";
+import { SHOW_PROTOTYPE } from "@/lib/prototype";
 
 export function MapHome({ state }: { state?: "offline" | "gps" | "arrival" }) {
   const { screen, audio, setAudio, setAudioPlaying, hanbokHidden, setHanbokHidden, servicesOpen, setServicesOpen, go } = useApp();
@@ -14,7 +15,7 @@ export function MapHome({ state }: { state?: "offline" | "gps" | "arrival" }) {
     <MapView />
     {!state && screen === "T-10" && !hanbokHidden && <div className="hanbok-card"><div><strong>Experience Gyeongbokgung in hanbok</strong><small>Find nearby hanbok rentals</small><button className="hide-this" onClick={() => setHanbokHidden(true)}>Hide this</button></div><button className="card-cta" onClick={() => go("T-60")}>Hanbok rental</button></div>}
     <button className="route-fab" onClick={() => go("T-14")}><Icon name="route" size={18} /> Recommend a route</button>
-    {state !== "gps" && <button className="simulate" onClick={() => go("T-13")}>Simulate arrival</button>}
+    {SHOW_PROTOTYPE && state !== "gps" && <button className="simulate" onClick={() => go("T-13")}>Simulate arrival</button>}
     {(state === "arrival" || screen === "T-13") && <div className="arrival-toast"><Icon name="location" /><span>You've arrived at <strong>Geunjeongjeon</strong></span><button onClick={() => { setAudio(true); setAudioPlaying(true); go("T-12"); }}>Play guide <Icon name="play" size={14} /></button></div>}
   </div>;
 }

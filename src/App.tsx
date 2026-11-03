@@ -5,20 +5,22 @@ import { Tabs } from "@/components/layout/Tabs";
 import { AudioPlayer } from "@/components/layout/AudioPlayer";
 import { ProperNounSheet } from "@/components/layout/ProperNounSheet";
 import { ScreenIndex } from "@/components/dev/ScreenIndex";
+import { SHOW_PROTOTYPE } from "@/lib/prototype";
+import "@/styles/production.css";
 
 function Shell() {
   const { screen, guideMode, onboarding, cameraScreen, audio, toast } = useApp();
   const showChrome = !onboarding && !guideMode && !cameraScreen;
-  return <div className="prototype-canvas">
+  return <div className={`prototype-canvas ${SHOW_PROTOTYPE ? "" : "production"}`}>
     <div className={`phone ${cameraScreen ? "camera-mode" : ""}`}>
-      <span className="screen-id">{screen}</span>
+      {SHOW_PROTOTYPE && <span className="screen-id">{screen}</span>}
       {showChrome && <TopBar />}
       <main className={`phone-content ${!showChrome ? "full" : audio ? "with-audio" : ""}`}><ScreenRouter /></main>
       {showChrome && <><AudioPlayer /><Tabs /></>}
       <ProperNounSheet />
       {toast && <div className="toast" role="status">{toast}</div>}
     </div>
-    <ScreenIndex />
+    {SHOW_PROTOTYPE && <ScreenIndex />}
   </div>;
 }
 

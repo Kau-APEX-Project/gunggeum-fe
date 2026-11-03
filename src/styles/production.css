@@ -1,0 +1,7 @@
+/* 배포 모드(시안 요소를 숨긴 상태)에서만 적용되는 스타일 / 스위치: src/lib/prototype.ts
+   폰 틀·그림자·회색 배경을 없애고 휴대폰에서는 화면 채우기, 컴퓨터에서는 가운데 480px 폭으로 */
+html.production-mode { background: var(--color-bg); }
+
+.prototype-canvas.production { display: block; min-height: 100dvh; padding: 0; background: var(--color-bg); }
+.prototype-canvas.production .phone { width: 100%; max-width: 480px; height: 100dvh; margin: 0 auto; border: 0; border-radius: 0; box-shadow: none; }
+.prototype-canvas.production .camera-screen { min-height: 100dvh; }
