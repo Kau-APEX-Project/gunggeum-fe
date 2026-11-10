@@ -6,6 +6,7 @@ import { AudioPlayer } from "@/components/layout/AudioPlayer";
 import { ProperNounSheet } from "@/components/layout/ProperNounSheet";
 import { ScreenIndex } from "@/components/dev/ScreenIndex";
 import { SHOW_PROTOTYPE } from "@/lib/prototype";
+import { AppEffects } from "@/components/layout/AppEffects";
 import "@/styles/production.css";
 
 function Shell() {
@@ -18,6 +19,7 @@ function Shell() {
       <main className={`phone-content ${!showChrome ? "full" : audio ? "with-audio" : ""}`}><ScreenRouter /></main>
       {showChrome && <><AudioPlayer /><Tabs /></>}
       <ProperNounSheet />
+      <AppEffects />
       {toast && <div className="toast" role="status">{toast}</div>}
     </div>
     {SHOW_PROTOTYPE && <ScreenIndex />}

@@ -42,5 +42,5 @@ export function GuideCreate() {
     <label className="consent"><input type="checkbox" checked={guideConsent} onChange={(e) => setGuideConsent(e.target.checked)} /><span>I agree that my voice is converted to text and <strong>NOT stored.</strong></span></label>
     <p className="privacy-copy">Your speech is transcribed and translated in real time, then discarded. No audio recordings are kept; only subtitle text is shown to tourists during the session.</p>
     {notice && <p className="form-notice" role="alert">{notice}</p>}
-    <div className="flow-buttons"><Button disabled={!guideConsent || !accessCode.trim() || busy} onClick={create}>{busy ? "Creating…" : "Create session"}</Button><button className="text-button" onClick={() => go("G-05")}>Back to dashboard</button></div></div>;
+    <div className="flow-buttons"><Button disabled={!guideConsent || !accessCode.trim() || busy} onClick={create}>{busy ? "Creating…" : "Create session"}</Button><button className="text-button" onClick={() => go("T-00")}>Back</button></div></div>;
 }

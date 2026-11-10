@@ -1,11 +1,11 @@
-import {createCameraRecognizer} from './camera.mjs';
+import {createCameraRecognizer, MODEL_SHA256} from './camera.mjs';
 
 // Call once for the app and reuse the returned controller.
 // onOpenBuilding must connect to the existing frontend selection/navigation function.
 export async function createCameraFeature({onState, onCandidates, onOpenBuilding, onError}) {
   const base = new URL(`${import.meta.env.BASE_URL}camera/`, window.location.origin);
   const ort = await import(/* @vite-ignore */ new URL('ort/ort.webgpu.min.mjs', base).href);
-  const response = await fetch(new URL('class_mapping.json', base));
+  const response = await fetch(new URL('class_mapping.json?v='+MODEL_SHA256, base));
   if (!response.ok) throw new Error('Class mapping download failed');
   const mapping = await response.json();
   let latest = null;

@@ -8,8 +8,8 @@ export const groups: { title: string; screens: [ScreenId, string][] }[] = [
   { title: "Ask", screens: [["T-40", "Ask start"], ["T-41", "Chat answer"], ["T-42", "No-evidence answer"], ["T-43", "Chat route"], ["T-44", "Nearby amenities"]] },
   { title: "Extras", screens: [["T-50", "Notices"], ["T-51", "Digital passport"]] },
   { title: "Hanbok Rental", screens: [["T-60", "Hanbok Rental Home"], ["T-61", "Hanbok Shop Detail"], ["T-62", "Hanbok Booking"], ["T-63", "Hanbok Payment"], ["T-64", "Booking Confirmation"], ["T-65", "My Hanbok Booking"], ["T-65A", "Hanbok Reservation QR"]] },
-  { title: "Guide Mode", screens: [["G-00", "Guide Login"], ["G-01", "Create Interpretation Session"], ["G-02", "Session QR Share"], ["G-03", "Live Session Console"], ["G-04", "Session Summary"], ["G-05", "Guide Dashboard"]] },
+  { title: "Guide Mode", screens: [["G-01", "Create Interpretation Session"], ["G-02", "Session QR Share"], ["G-03", "Live Session Console"], ["G-04", "Session Summary"]] },
   { title: "Edge States", screens: [["S-01", "Offline banner"], ["S-02", "Live subtitle reconnecting"], ["S-03", "Weak GPS"], ["S-04", "Guide mic off"], ["S-05", "Camera permission denied"], ["S-06", "Too many requests"]] },
 ];
 
-export const mvp = new Set<ScreenId>(["T-60", "T-61", "T-62", "T-63", "T-64", "G-00", "T-10", "T-11", "T-12", "T-16", "T-31", "G-01", "G-02", "G-03", "T-40", "T-41", "T-42"]);
+export const mvp = new Set<ScreenId>(["T-60", "T-61", "T-62", "T-63", "T-64", "T-10", "T-11", "T-12", "T-16", "T-31", "G-01", "G-02", "G-03", "T-40", "T-41", "T-42"]);
