@@ -1,7 +1,7 @@
 import {preprocess} from './preprocess.mjs';
 import {RecognitionError, validateMapping, formatResult} from './results.mjs';
 
-export const MODEL_SHA256 = '48f165745903ccb7dfa791411f1475874183f868020a4a09ecefe482d81a46c4';
+export const MODEL_SHA256 = '9f957162755bc236f698c802aed820d76719cd4b5de7b3c0c3c0fc9d6bba47fe';
 
 // One instance per app. Pass the same ORT instance used by the frontend.
 export function createCameraRecognizer({ort, modelUrl, mappingUrl, wasmPaths,
@@ -16,7 +16,8 @@ export function createCameraRecognizer({ort, modelUrl, mappingUrl, wasmPaths,
   const error=(code,message,cause)=>new RecognitionError(code,message,cause);
   const live=()=>{if(closed)throw error('DISPOSED','해제된 인식 모듈입니다.');};
   async function fetchOK(url) {
-    const r=await fetchImpl(url);
+    const resource = String(url);
+    const r=await fetchImpl(resource + (resource.includes('?')?'&':'?') + 'v='+MODEL_SHA256);
     if(!r.ok)throw error('DOWNLOAD_FAILED',`파일 요청 실패 (${r.status})`);
     return r;
   }
@@ -34,7 +35,7 @@ export function createCameraRecognizer({ort, modelUrl, mappingUrl, wasmPaths,
       ort.env.wasm.numThreads=1;
       if(wasmPaths)ort.env.wasm.wasmPaths=wasmPaths;
       emit('downloading');
-      mapping=await(await fetchOK(mappingUrl)).json();validateMapping(mapping,'exp005_epoch16');
+      mapping=await(await fetchOK(mappingUrl)).json();validateMapping(mapping,'field_expand_epoch12_weight_fp16');
       if(!bytes) {
         const candidate=await(await fetchOK(modelUrl)).arrayBuffer();
         const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',candidate)),v=>v.toString(16).padStart(2,'0')).join('');

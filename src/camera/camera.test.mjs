@@ -5,7 +5,7 @@ import {createCameraRecognizer} from './camera.mjs';
 
 const blob=new Blob(['photo']);
 const model=new Uint8Array([1,2,3]);
-const mapping={model_version:'exp005_epoch16',mapping_version:'test',classes:Array.from({length:60},(_,i)=>({class_index:i,name_ko:`전각${i}`,card_id:`b-${i}`,mapping_status:'confirmed'}))};
+const mapping={model_version:'field_expand_epoch12_weight_fp16',mapping_version:'test',classes:Array.from({length:60},(_,i)=>({class_index:i,name_ko:`전각${i}`,card_id:`b-${i}`,mapping_status:'confirmed'}))};
 const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve};};
 function fixture({initFail=false,runFail=false,nan=false,gate=null,preprocessImage=async()=>new Float32Array(3*320*320),hash=null}={}) {
   const log={created:[],released:[],fetches:0,runs:[],states:[]};

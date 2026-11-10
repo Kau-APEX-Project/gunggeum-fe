@@ -1,5 +1,3 @@
-// 1순위 점수가 이 값 이상이면 후보를 1개만 보여줌
+// Softmax 점수 기준입니다. 정답률이 아닙니다.
 export const SINGLE_RESULT_MIN = 0.92;
-
-// 1순위 점수가 이 값 미만이면 경고(임의값)
-export const LOW_SCORE_WARNING = 0.8;
+export const LOW_SCORE_WARNING = 0.70;

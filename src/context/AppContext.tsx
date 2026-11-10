@@ -28,7 +28,6 @@ function useAppState() {
   const [duration, setDuration] = useState("90 min");
   const [hanbokHidden, setHanbokHidden] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
-  const [guideAuthed, setGuideAuthed] = useState(false);
   const [toast, setToast] = useState("");
   const [routeTime, setRouteTime] = useState("60 min");
   const [routeInterests, setRouteInterests] = useState<string[]>(["Architecture", "Gardens"]);
@@ -58,7 +57,7 @@ function useAppState() {
   const cameraScreen = ["T-20", "T-21", "T-22"].includes(screen);
 
   function go(next: ScreenId, keepIndex = false) {
-    // 지도·목록(goToPlace)이 아닌 곳에서 건물 상세로 오면 선택을 비워서 샘플 화면을 보여줌
+    // 지도·목록(goToPlace)이 아닌 곳에서 건물 상세로 오면 선택을 비워서 샘플 화면을 보여 줌
     if (next === "T-12") setSelectedPlaceId(null);
     setHistory((items) => [...items, screen]);
     setScreen(next);
@@ -68,14 +67,13 @@ function useAppState() {
 
   function jump(next: ScreenId) {
     if (["T-31", "S-02", "S-04"].includes(next)) setSessionLive(true);
-    if (next.startsWith("G-")) setGuideAuthed(true);
     go(next);
   }
 
-  // 건물을 골라서 상세 화면으로 갈 때 사용 (지도 핀, 건물 목록)
+  // 건물을 골라서 상세 화면으로 갈 때 씁니다 (지도 핀, 건물 목록)
   function goToPlace(placeId: string, next: ScreenId = "T-12") {
     go(next);                     // go 는 T-12 로 올 때 선택을 비우고
-    setSelectedPlaceId(placeId);  // 바로 이어서 다시 기록한다 (나중에 호출한 값이 적용됨)
+    setSelectedPlaceId(placeId);  // 바로 이어서 다시 기록합니다 (나중에 호출한 값이 적용됨)
   }
 
   function setLiveActive(on: boolean) {
@@ -103,8 +101,7 @@ function useAppState() {
 
   useEffect(() => {
     if (!sessionLive && ["T-31", "S-02", "S-04"].includes(screen)) go("T-32", true);
-    if (screen.startsWith("G-") && screen !== "G-00" && !guideAuthed) go("G-00", true);
-  }, [sessionLive, screen, guideAuthed]);
+  }, [sessionLive, screen]);
 
   useEffect(() => {
     if (!["T-31", "S-02", "S-04"].includes(screen)) return;
@@ -130,8 +127,8 @@ function useAppState() {
     go("T-61");
   }
 
-  // 질문을 서버로 보냄, 기다리는 동안은 T-41 에서 로딩을 보여 주고
-  // 답이 오면 T-41(답변) / T-42(근거 없음) / T-43(길 묻기) / T-44(편의시설) / S-06(요청 과다) 중 맞는 화면으로 바꿉니다.
+  // 질문을 서버로 보냅니다. 기다리는 동안은 T-41 에서 로딩을 보여 주고,
+  // 답이 오면 T-41(답변) · T-42(근거 없음) · T-43(길 묻기) · T-44(편의시설) · S-06(요청 과다) 중 맞는 화면으로 바꿉니다.
   function ask(question: string) {
     const q = question.trim();
     if (!q) return;
@@ -146,7 +143,7 @@ function useAppState() {
     confidence, setConfidence, guideConsent, setGuideConsent, micOn, setMicOn, original, setOriginal, fontSize, setFontSize,
     subtitleCount, setSubtitleCount, query, setQuery, chatQuestion, setChatQuestion, sessionLive, setSessionLive, liveSec, setLiveSec,
     guideSec, setGuideSec, openTour, setOpenTour, langs, setLangs, duration, setDuration, hanbokHidden, setHanbokHidden,
-    servicesOpen, setServicesOpen, guideAuthed, setGuideAuthed, toast, setToast, routeTime, setRouteTime, routeInterests, setRouteInterests,
+    servicesOpen, setServicesOpen, toast, setToast, routeTime, setRouteTime, routeInterests, setRouteInterests,
     statesOpen, setStatesOpen, setSettingsNote, hanbokFilters, setHF, shopIdx, setShopIdx, bk, setBk, payMethod, setPayMethod,
     paying, setPaying, newCode, setNewCode, hbSave, setHbSave, qrCode, setQrCode, sessionCode, setSessionCode, joined, setJoined,
     openBk, setOpenBk, cancelAsk, setCancelAsk, lookupMsg, setLookupMsg, bookings, setBookings, streamRef, guideMode, onboarding,

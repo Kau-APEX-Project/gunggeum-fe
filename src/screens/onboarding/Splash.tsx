@@ -9,6 +9,6 @@ export function Splash() {
     <h1>GungGeum</h1><p>Your palace guide<br />in your language</p>
     <div className="no-signup"><Icon name="check" size={17} /> No sign-up needed</div>
     <Button onClick={() => go("T-01")}>Start</Button>
-    <button className="guide-entry" onClick={() => go("G-00")}>I'm a palace guide <Icon name="chevron" size={15} /></button>
+    <button className="guide-entry" onClick={() => go("G-01")}>I'm a palace guide <Icon name="chevron" size={15} /></button>
   </div>;
 }

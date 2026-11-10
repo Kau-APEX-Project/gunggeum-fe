@@ -4,8 +4,6 @@ import { Notices } from "@/screens/extras/Notices";
 import { Passport } from "@/screens/extras/Passport";
 import { GuideConsole } from "@/screens/guide/GuideConsole";
 import { GuideCreate } from "@/screens/guide/GuideCreate";
-import { GuideDashboard } from "@/screens/guide/GuideDashboard";
-import { GuideLogin } from "@/screens/guide/GuideLogin";
 import { GuideShare } from "@/screens/guide/GuideShare";
 import { GuideSummary } from "@/screens/guide/GuideSummary";
 import { HanbokBooking } from "@/screens/hanbok/HanbokBooking";
@@ -64,8 +62,6 @@ export function ScreenRouter() {
     case "T-44": return <Chat mode="amenity" />;
     case "T-50": return <Notices />;
     case "T-51": return <Passport />;
-    case "G-00": return <GuideLogin />;
-    case "G-05": return <GuideDashboard />;
     case "G-01": return <GuideCreate />;
     case "G-02": return <GuideShare />;
     case "G-03": return <GuideConsole />;
