@@ -3,6 +3,8 @@ import { Icon } from "@/components/ui/Icon";
 import { MapView } from "@/screens/map/MapView";
 import { useApp } from "@/context/AppContext";
 import { usePlaces } from "@/data/places";
+import { setGuideTrack } from "@/lib/audioStore";
+import { useOnline } from "@/lib/online";
 import { SHOW_PROTOTYPE } from "@/lib/prototype";
 import { clearArrival, ensureVisitTracking, representative, useVisit } from "@/lib/visitStore";
 import { NoticeBanner } from "@/components/layout/NoticeBanner";
@@ -11,15 +13,17 @@ export function MapHome({ state }: { state?: "offline" | "gps" | "arrival" }) {
   const { screen, audio, setAudio, setAudioPlaying, hanbokHidden, setHanbokHidden, servicesOpen, setServicesOpen, go, goToPlace } = useApp();
   const { places } = usePlaces();
   const visit = useVisit();
+  const online = useOnline();
+  const offline = state === "offline" || (!state && !online); // 시안 화면 또는 실제로 인터넷이 끊김
   // 이미 위치 허용을 해 둔 사람은 지도 홈에 들어올 때 방문 판정을 자동으로 시작
   useEffect(() => { ensureVisitTracking(); }, []);
   const weak = !state && visit.tracking === "on" && visit.weakGps; // 실제 위치 정확도가 계속 나쁠 때 (S-03)
   const arrived = visit.arrival ? representative(places, visit.arrival.poiId) : undefined; // 방금 도착한 장소의 대표 (없으면 시안 예시)
-  const play = () => { setAudio(true); setAudioPlaying(true); if (arrived) goToPlace(arrived.id); else go("T-12"); clearArrival(); };
+  const play = () => { setGuideTrack(arrived ?? null); setAudio(true); setAudioPlaying(true); if (arrived) goToPlace(arrived.id); else go("T-12"); clearArrival(); };
   return <div className="map-screen">
-    {state === "offline" && <div className="state-banner"><strong>You're offline.</strong> Map, audio guide, and camera still work. Live Tour and Ask need a connection.</div>}
+    {offline && <div className="state-banner"><strong>You're offline.</strong> Live Tour and Ask need a connection.</div>}
     {(state === "gps" || weak) && <div className="state-banner"><strong>Location is uncertain — choose a building from the list</strong> Auto-play is paused.<button onClick={() => go("T-11")}>Choose from list</button></div>}
-    {!state && !weak && <NoticeBanner />}
+    {!state && !weak && !offline && <NoticeBanner />}
     <div className="map-tools"><button onClick={() => go("T-11")}><Icon name="list" size={17} /> List</button>
       {!state && <button onClick={() => setServicesOpen(!servicesOpen)} aria-expanded={servicesOpen}><Icon name="compass" size={17} /> Services</button>}
       {!state && servicesOpen && <div className="services-menu"><button onClick={() => { setServicesOpen(false); go("T-60"); }}>Hanbok rental <Icon name="chevron" size={13} /></button></div>}</div>

@@ -1,10 +1,14 @@
-import { Fragment, useEffect, useRef } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import "@/styles/connect.css";
 import { ScreenHeader } from "@/components/layout/ScreenHeader";
 import { Icon } from "@/components/ui/Icon";
 import { useApp } from "@/context/AppContext";
 import { askErrorText } from "@/lib/apiTypes";
 import { retryTurn, useAskTurns, type AskTurn } from "@/lib/askStore";
+import { useLanguage } from "@/lib/language";
+import { navigateTo, navigateToStop } from "@/lib/navStore";
+import { amenitiesNear, amenityStop, legTo, loadRouteData, startPoint, type RouteStop } from "@/lib/routeStore";
+import { useVisit } from "@/lib/visitStore";
 import { AnswerText } from "@/screens/ask/AnswerText";
 import { ChatInput } from "@/screens/ask/ChatInput";
 
@@ -27,13 +31,80 @@ function Loading() {
   return <div className="ask-loading" role="status"><span className="ask-dots"><i /><i /><i /></span>Finding sources…</div>;
 }
 
-// 지도 안내는 준비 중 (길 안내 모듈 연결 전)
-function MapSoon({ kind }: { kind: "route" | "amenity" }) {
+const meterText = (m: number) => (m >= 1000 ? `${(m / 1000).toFixed(1)} km` : `${Math.max(10, Math.round(m / 10) * 10)} m`);
+const minText = (m: number) => `${Math.max(1, Math.round(m))} min`;
+type AskAction = NonNullable<AskTurn["action"]>;
+
+// 길 묻기(T-43): 목적지까지 걸어서 거리·시간을 보여 주고 안내를 시작하는 버튼
+function RouteCard({ to }: { to: string }) {
   const { go } = useApp();
+  const pos = useVisit().position;
+  const [info, setInfo] = useState<"loading" | "error" | { meters: number; minutes: number; fromGate: boolean }>("loading");
+  useEffect(() => {
+    let off = false;
+    loadRouteData().then((data) => {
+      if (off) return;
+      const stop = data.stops.get(to);
+      const { here, fromGate } = startPoint(data, pos ? [pos.lng, pos.lat] : null);
+      const r = stop ? legTo(data, here, stop) : null;
+      setInfo(r ? { meters: r.meters, minutes: r.minutes, fromGate } : "error");
+    }).catch(() => { if (!off) setInfo("error"); });
+    return () => { off = true; };
+  }, [to, pos?.lat, pos?.lng]);
+
+  if (info === "loading") return <div className="map-soon"><small>Finding the walking route…</small></div>;
+  if (info === "error") return <div className="map-soon">
+    <Icon name="route" size={26} /><strong>We couldn't find a walking route</strong>
+    <small>Please find the building on the map or in the list.</small>
+    <button className="ask-btn" onClick={() => go("T-10")}>Open the map</button>
+  </div>;
+  return <div className="map-soon">
+    <Icon name="route" size={26} /><strong>{meterText(info.meters)} · {minText(info.minutes)} on foot</strong>
+    <small>{info.fromGate ? "Measured from Gwanghwamun Gate because your position isn't available." : "Measured from your current position."}</small>
+    <button className="ask-btn" onClick={() => { void navigateTo(to); go("T-16"); }}>Start navigation</button>
+  </div>;
+}
+
+// 근처 편의시설(T-44): 걸어서 가까운 3곳을 보여 주고 고르면 안내 시작
+function AmenityCard({ category }: { category: "restroom" | "bench" | "water" }) {
+  const { go } = useApp();
+  const lang = useLanguage();
+  const pos = useVisit().position;
+  const [list, setList] = useState<"loading" | "error" | { stop: RouteStop; meters: number; minutes: number }[]>("loading");
+  const [fromGate, setFromGate] = useState(false);
+  useEffect(() => {
+    let off = false;
+    loadRouteData().then((data) => {
+      if (off) return;
+      const start = startPoint(data, pos ? [pos.lng, pos.lat] : null);
+      setFromGate(start.fromGate);
+      setList(amenitiesNear(data, start.here, category, 3).map((a) => ({ stop: amenityStop(data, a, category), meters: a.meters, minutes: a.minutes })));
+    }).catch(() => { if (!off) setList("error"); });
+    return () => { off = true; };
+  }, [category, pos?.lat, pos?.lng]);
+
+  if (list === "loading") return <div className="map-soon"><small>Finding the nearest spots…</small></div>;
+  if (list === "error" || list.length === 0) return <div className="map-soon">
+    <Icon name="location" size={26} /><strong>We couldn't find a nearby spot</strong>
+    <button className="ask-btn" onClick={() => go("T-10")}>Open the map</button>
+  </div>;
+  return <div className="map-soon">
+    <Icon name="location" size={26} /><strong>Nearest on foot</strong>
+    <small>{fromGate ? "Measured from Gwanghwamun Gate because your position isn't available." : "Tap one to get walking directions."}</small>
+    <div className="ask-actions">{list.map((item, i) => <button key={item.stop.id} className="ask-btn" onClick={() => { void navigateToStop(item.stop); go("T-16"); }}>
+      {(lang === "th" ? item.stop.name.th : item.stop.name.en)} {i + 1} · {meterText(item.meters)} · {minText(item.minutes)}</button>)}</div>
+  </div>;
+}
+
+// 서버가 준 action 에 맞는 카드 (action 이 없으면 시안 예시용 안내)
+function MapCard({ action, kind }: { action?: AskAction | null; kind: "route" | "amenity" }) {
+  const { go } = useApp();
+  if (action?.type === "route") return <RouteCard to={action.to} />;
+  if (action?.type === "amenity") return <AmenityCard category={action.category} />;
   return <div className="map-soon">
     <Icon name={kind === "route" ? "route" : "location"} size={26} />
-    <strong>Map directions are coming soon</strong>
-    <small>{kind === "route" ? "For now, find the building on the map or in the list." : "Restroom, bench and water spots will appear on the map."}</small>
+    <strong>Walking directions appear here</strong>
+    <small>{kind === "route" ? "Ask for a building to see how to get there." : "Ask for a restroom, bench or water to see the nearest spots."}</small>
     <button className="ask-btn" onClick={() => go("T-10")}>Open the map</button>
   </div>;
 }
@@ -61,7 +132,7 @@ export function Chat({ mode = "answer" }: { mode?: ChatMode }) {
     return <>
       <AnswerText text={turn.answer ?? ""} onCard={onCard} />
       {turn.kind === "noEvidence" && <div className="ask-actions"><button className="ask-btn" onClick={() => go("T-11")}>Browse the building list</button></div>}
-      {(turn.kind === "route" || turn.kind === "amenity") && <MapSoon kind={turn.kind} />}
+      {(turn.kind === "route" || turn.kind === "amenity") && <MapCard action={turn.action} kind={turn.kind} />}
     </>;
   }
 
@@ -72,7 +143,7 @@ export function Chat({ mode = "answer" }: { mode?: ChatMode }) {
         <div className="bot-row"><span className="bot-icon">G</span><div className="bot-copy">
           <AnswerText text={SAMPLE[mode]} onCard={onCard} />
           {mode === "noEvidence" && <div className="ask-actions"><button className="ask-btn" onClick={() => go("T-11")}>Browse the building list</button></div>}
-          {(mode === "route" || mode === "amenity") && <MapSoon kind={mode} />}
+          {(mode === "route" || mode === "amenity") && <MapCard kind={mode} />}
           {mode === "rateLimited" && <div className="ask-actions"><button className="ask-btn" onClick={() => go("T-40")}>Try again</button></div>}
         </div></div></>
       : turns.map((turn) => <Fragment key={turn.id}>

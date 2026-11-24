@@ -20,3 +20,4 @@ Thumbs.db
 /public/visit/
 /public/camera/
 /public/audio/*.mp3
+public/audio/*.mp4

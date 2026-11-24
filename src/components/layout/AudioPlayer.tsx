@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { Icon } from "@/components/ui/Icon";
 import { useApp } from "@/context/AppContext";
-import { sampleTrack } from "@/data/audio";
+import { useAudioTrack } from "@/lib/audioStore";
 
 const clock = (sec: number) => {
   if (!Number.isFinite(sec)) return "0:00";
@@ -13,6 +13,9 @@ export function AudioPlayer() {
   const ref = useRef<HTMLAudioElement>(null);
   const [time, setTime] = useState(0);          // 현재 재생 위치
   const [duration, setDuration] = useState(0);  // 전체 길이
+  const track = useAudioTrack();                // 지금 재생할 건물의 음성
+  const [failed, setFailed] = useState(false);   // 이 건물의 음성 파일을 못 불러옴
+  useEffect(() => { setFailed(false); setTime(0); setDuration(0); }, [track.src]);
 
   useEffect(() => {
     const el = ref.current;
@@ -23,7 +26,7 @@ export function AudioPlayer() {
     } else {
       el.pause();
     }
-  }, [audioPlaying, audio, setAudioPlaying]);
+  }, [audioPlaying, audio, track.src, setAudioPlaying]);
 
   if (!audio) return null;
 
@@ -39,22 +42,22 @@ export function AudioPlayer() {
   return <div className="audio-player">
     <audio
       ref={ref}
-      src={sampleTrack.src}
+      src={track.src}
       preload="metadata"
       onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
       onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}
       onPlay={() => setAudioPlaying(true)}
       onPause={() => setAudioPlaying(false)}
-      onError={() => setAudioPlaying(false)}
+      onError={() => { setFailed(true); setAudioPlaying(false); }}
     />
     <button className="audio-play" onClick={() => setAudioPlaying(!audioPlaying)} aria-label={audioPlaying ? "Pause" : "Play"}>
       <Icon name={audioPlaying ? "pause" : "play"} size={15} />
     </button>
     <div className="audio-info">
-      <strong>{sampleTrack.title}</strong>
-      <div style={{ padding: "3px 0", cursor: "pointer" }} onClick={seek}>
+      <strong>{track.title}</strong>
+      {failed ? <small role="alert">Audio is not available for this building yet.</small> : <div style={{ padding: "3px 0", cursor: "pointer" }} onClick={seek}>
         <div className="audio-track"><span style={{ width: `${percent}%` }} /></div>
-      </div>
+      </div>}
     </div>
     <span className="audio-time" style={{ whiteSpace: "nowrap" }}>{clock(time)} / {clock(duration)}</span>
     <button onClick={() => setAudio(false)} aria-label="Close player"><Icon name="close" size={16} /></button>
