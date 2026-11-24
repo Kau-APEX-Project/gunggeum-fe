@@ -134,8 +134,10 @@ function useAppState() {
     if (!q) return;
     setChatQuestion(q);
     setQuery("");
+    // 질문 화면(T-41~T-44, S-06)에서 이어 묻는 게 아니면 첫 질문이므로 이전 대화를 비움
+    const inChat = ["T-41", "T-42", "T-43", "T-44", "S-06"].includes(screen);
     if (screen !== "T-41") go("T-41");
-    runAsk(q, (next) => setScreen((current) => (current.startsWith("T-4") || current === "S-06" ? next : current)));
+    runAsk(q, (next) => setScreen((current) => (current.startsWith("T-4") || current === "S-06" ? next : current)), { fresh: !inChat });
   }
 
   return {
