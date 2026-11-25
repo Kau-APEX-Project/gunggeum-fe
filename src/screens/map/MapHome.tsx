@@ -9,7 +9,7 @@ import { SHOW_PROTOTYPE } from "@/lib/prototype";
 import { clearArrival, ensureVisitTracking, representative, useVisit } from "@/lib/visitStore";
 import { NoticeBanner } from "@/components/layout/NoticeBanner";
 
-// 이런 저런 이유로 실서비스 화면에서는 진입 버튼을 숨김 (개발 모드에서만 보임)
+// 이런 저런 이유로 실서비스 화면에서는 진입 버튼을 숨김
 const SHOW_HANBOK = SHOW_PROTOTYPE;
 
 export function MapHome({ state }: { state?: "offline" | "gps" | "arrival" }) {
