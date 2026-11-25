@@ -26,7 +26,6 @@ react(),
         registerType: 'autoUpdate',
         workbox: { globIgnores: ['**/camera/**'] }, // 카메라 모델·wasm(수십 MB)은 앱 설치 때 미리 저장하지 않음
         includeAssets: ['apple-touch-icon.png'],
-        includeAssets: ['apple-touch-icon.png'],
         manifest: {
           name: 'GungGeum',
           short_name: 'GungGeum',

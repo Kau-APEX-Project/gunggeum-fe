@@ -6,8 +6,9 @@ import { onVisitEvent } from "@/lib/visitStore";
 //   plan: T-14 에서 만든 코스 (T-15 결과 화면이 읽음)
 //   steps: 안내할 순서 = 코스의 곳들 + 마지막에 광화문 복귀. 한 곳만 안내할 때는 그 한 곳.
 //   다음 곳으로 넘어가는 조건
-//     전각: 방문 판정의 스탬프(25초 머묾)가 그 곳(또는 같은 권역)에서 나옴
-//     자연 지점·광화문: 가까이(30m) 도착
+//     모든 곳: 그 곳의 핀 또는 경로의 도착 지점에서 30m 안으로 들어옴
+//     전각: 위와 별개로 방문 판정의 스탬프(25초 머묾)가 그 곳(또는 같은 권역)에서 나와도 넘어감
+//       (스탬프는 장소마다 한 번만 나오므로, 이미 받은 곳은 거리 조건으로만 넘어감)
 //     사용자가 Skip 을 누름
 //   위치는 화면(Navigation)이 updatePosition 으로 넣어 줌
 
@@ -21,7 +22,7 @@ export type NavState = {
   status: "idle" | "loading" | "active" | "finished" | "error";
 };
 
-const ARRIVE_M = 30;                 // 자연 지점·광화문 도착으로 보는 거리
+const ARRIVE_M = 30;                 // 도착으로 보는 거리
 const REROUTE_M = 8;                 // 이만큼 움직이면 경로를 다시 계산
 
 let state: NavState = { plan: null, steps: [], idx: 0, leg: null, status: "idle" };
@@ -120,13 +121,19 @@ export function endNavigation() {
   set({ steps: [], idx: 0, leg: null, status: "idle" });
 }
 
+/** 지금 가는 곳에 도착했는지: 핀, 또는 경로가 끝나는 지점(approach node) 중 하나가 ARRIVE_M 안 (큰 건물은 핀이 멀 수 있음) */
+function reached(step: NavStep, pos: LngLat): boolean {
+  if (distM(pos, step.pin) <= ARRIVE_M) return true;
+  const coord = data?.graph.coord;
+  return !!coord && step.approachNodes.some((id) => { const c = coord.get(id); return !!c && distM(pos, c) <= ARRIVE_M; });
+}
+
 /** 화면이 내 위치가 바뀔 때마다 부름 */
 export function updatePosition(pos: LngLat) {
   me = pos;
   if (state.status !== "active") return;
   const step = state.steps[state.idx];
   if (!step) return;
-  const isLast = state.idx === state.steps.length - 1;
-  if ((step.nature || isLast) && distM(pos, step.pin) <= ARRIVE_M) { advance(); return; }
+  if (reached(step, pos)) { advance(); return; }
   if (!legFrom || distM(pos, legFrom) >= REROUTE_M) recompute();
 }
