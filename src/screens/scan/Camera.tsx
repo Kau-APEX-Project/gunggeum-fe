@@ -1,3 +1,4 @@
+import { acknowledgeComparisonPaint } from "@/components/dev/CameraComparePanel";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import "@/styles/camera.css";
 import { Button } from "@/components/ui/Button";
@@ -33,6 +34,7 @@ export function Camera({ result }: { result?: "high" | "low" }) {
   const { go, goToPlace, ask } = useApp();
   const { places } = usePlaces();
   const cam = useCameraState();
+  const comparing = new URLSearchParams(location.search).get("cameraCompare") === "1";
   const [noMatch, setNoMatch] = useState(false); // 맞는 게 없어요 안내를 펼친 상태
 
   const pick = useRef(goToPlace);
@@ -54,8 +56,12 @@ export function Camera({ result }: { result?: "high" | "low" }) {
   const top = cam.candidates[0];
   useEffect(() => {
     setNoMatch(false);
-    if (!result && top) go(top.score >= SINGLE_RESULT_MIN ? "T-21" : "T-22");
+    if (top && (!result || comparing)) go(top.score >= SINGLE_RESULT_MIN ? "T-21" : "T-22");
   }, [cam.candidates]);
+
+  useEffect(() => {
+    if (top && result === (top.score >= SINGLE_RESULT_MIN ? 'high' : 'low')) acknowledgeComparisonPaint();
+  }, [result, cam.candidates]);
 
   const onFile = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

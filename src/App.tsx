@@ -7,6 +7,7 @@ import { ProperNounSheet } from "@/components/layout/ProperNounSheet";
 import { ScreenIndex } from "@/components/dev/ScreenIndex";
 import { SHOW_PROTOTYPE } from "@/lib/prototype";
 import { AppEffects } from "@/components/layout/AppEffects";
+import { CameraComparePanel } from "@/components/dev/CameraComparePanel";
 import "@/styles/production.css";
 
 function Shell() {
@@ -19,6 +20,7 @@ function Shell() {
       <main className={`phone-content ${!showChrome ? "full" : audio ? "with-audio" : ""}`}><ScreenRouter /></main>
       {showChrome && <><AudioPlayer /><Tabs /></>}
       <ProperNounSheet />
+      <CameraComparePanel />
       <AppEffects />
       {toast && <div className="toast" role="status">{toast}</div>}
     </div>

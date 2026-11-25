@@ -102,6 +102,7 @@ function revokePhoto() {
 
 // 화면에서 쓰는 함수 목록
 export async function enterCamera() {
+  if (new URLSearchParams(location.search).get("cameraCompare") === "1") return;
   set({ errorCode: null });
   try {
     const f = await getFeature();
@@ -167,4 +168,17 @@ export function cameraErrorText(code: string): string {
         ? "The recognizer couldn't be set up. Check your connection and try again."
         : "Something went wrong. Please try again.";
   }
+}
+
+export async function releaseCameraForComparison() {
+  const previous = featurePromise;
+  featurePromise = null;
+  if (previous) await (await previous).destroy();
+}
+export function showComparisonPhoto(file: File) {
+  revokePhoto();
+  set({ photoUrl: URL.createObjectURL(file), candidates: [], busy: true, errorCode: null });
+}
+export function showComparisonCandidates(candidates: CameraCandidate[]) {
+  set({ candidates, busy: false, errorCode: null, phase: "ready" });
 }
