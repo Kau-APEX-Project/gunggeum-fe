@@ -2,6 +2,7 @@ import { ScreenHeader } from "@/components/layout/ScreenHeader";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { useApp } from "@/context/AppContext";
+import { markOnboarded } from "@/lib/onboarding";
 import { startVisitTracking } from "@/lib/visitStore";
 
 export function Permission() {
@@ -10,6 +11,6 @@ export function Permission() {
     <h2>Hear the right story,<br />at the right place</h2>
     <p>GungGeum uses your location to detect when you arrive at a building and automatically suggest its audio guide.</p>
     <div className="privacy-note"><Icon name="check" />Your precise location is never stored.</div>
-    <div className="bottom-buttons"><Button onClick={() => { startVisitTracking(); go("T-10"); }}>Allow location</Button><button className="text-button" onClick={() => go("T-10")}>Not now</button></div>
+    <div className="bottom-buttons"><Button onClick={() => { markOnboarded(); startVisitTracking(); go("T-10"); }}>Allow location</Button><button className="text-button" onClick={() => { markOnboarded(); go("T-10"); }}>Not now</button></div>
   </div>;
 }

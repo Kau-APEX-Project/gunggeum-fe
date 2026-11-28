@@ -9,12 +9,12 @@ import { joinLive } from "@/lib/liveStore";
 //  1) 방문 판정 이벤트 처리 (VisitWatcher)
 //  2) QR 로 들어온 주소(/live/GB-1042) 처리: 세션에 바로 입장해서 자막 화면(T-31)으로
 export function AppEffects() {
-  const { go } = useApp();
+  const { go, jump } = useApp();
   useEffect(() => {
     const code = parseLiveCode(window.location.pathname);
     if (!code) return;
     window.history.replaceState(null, "", "/");
-    joinLive(code, getLanguage()).then((result) => go(result === "ended" ? "T-32" : "T-31"));
+    joinLive(code, getLanguage()).then((result) => (result === "ended" ? go("T-32") : jump("T-31")));
   }, []);
   return <VisitWatcher />;
 }

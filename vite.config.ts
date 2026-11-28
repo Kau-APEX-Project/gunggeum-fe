@@ -24,6 +24,7 @@ react(),
       // manifest 색상은 CSS 변수를 못 쓰므로 직접 적음(임시 색).
       VitePWA({
         registerType: 'autoUpdate',
+        workbox: { globIgnores: ['**/camera/**'] }, // 카메라 모델·wasm(수십 MB)은 앱 설치 때 미리 저장하지 않음
         includeAssets: ['apple-touch-icon.png'],
         manifest: {
           name: 'GungGeum',

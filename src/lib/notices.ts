@@ -6,9 +6,15 @@ import { useLanguage, type Lang } from "@/lib/language";
 // 서버가 연결되지 않은(가짜 서버) 상태에서는 시안용 예시 공지를 보여줌
 // 번역이 없는 공지는 서버가 한국어 원문(lang: "ko")으로 보내며 그대로 표시함
 
-export type Notice = { id: string; type: string; title: string; body: string; publishedAt: number | null; lang: string };
+export type Notice = { id: string; type: string; title: string; body: string; publishedAt: number | null; lang: string; sourceUrl: string | null };
 
 const str = (v: unknown): string => (typeof v === "string" ? v : "");
+
+// 출처 링크는 https 주소만 받음 (비어 있거나 다른 방식이면 null)
+export function safeSourceUrl(v: unknown): string | null {
+  if (typeof v !== "string" || !v.trim()) return null;
+  try { const u = new URL(v.trim()); return u.protocol === "https:" ? u.href : null; } catch { return null; }
+}
 
 // 응답 모양이 배열이든 { notices: [] } 든 받아들이고 필드 이름도 여러 가지를 허용함
 export function normalizeNotices(raw: unknown): Notice[] {
@@ -23,7 +29,7 @@ export function normalizeNotices(raw: unknown): Notice[] {
     if (!title && !body) continue;
     const at = o.publishedAt ?? o.published_at;
     const ms = typeof at === "number" ? (at < 1e12 ? at * 1000 : at) : typeof at === "string" ? Date.parse(at) : NaN;
-    out.push({ id: str(o.id) || `n-${out.length}`, type: str(o.type), title: title || body, body: title ? body : "", publishedAt: Number.isNaN(ms) ? null : ms, lang: str(o.lang) });
+    out.push({ id: str(o.id) || `n-${out.length}`, type: str(o.type), title: title || body, body: title ? body : "", publishedAt: Number.isNaN(ms) ? null : ms, lang: str(o.lang), sourceUrl: safeSourceUrl(o.sourceUrl ?? o.source_url) });
   }
   return out;
 }
@@ -46,9 +52,9 @@ export function formatWhen(ms: number | null, now: number = Date.now()): string 
 const sample = (): Notice[] => {
   const now = Date.now();
   return [
-    { id: "n-sample-1", type: "tour_cancelled", title: "Today 14:00 English tour cancelled due to rain.", body: "", publishedAt: now - 12 * 60000, lang: "en" },
-    { id: "n-sample-2", type: "weather", title: "Rain is expected after 13:00. Stone paths may be slippery.", body: "", publishedAt: now - 60 * 60000, lang: "en" },
-    { id: "n-sample-3", type: "event_change", title: "The Changing of the Guard ceremony will move to Heungnyemun.", body: "", publishedAt: now - 24 * 3600000, lang: "en" },
+    { id: "n-sample-1", type: "tour_cancelled", title: "Today 14:00 English tour cancelled due to rain.", body: "", publishedAt: now - 12 * 60000, lang: "en", sourceUrl: null },
+    { id: "n-sample-2", type: "weather", title: "Rain is expected after 13:00. Stone paths may be slippery.", body: "", publishedAt: now - 60 * 60000, lang: "en", sourceUrl: null },
+    { id: "n-sample-3", type: "event_change", title: "The Changing of the Guard ceremony will move to Heungnyemun.", body: "", publishedAt: now - 24 * 3600000, lang: "en", sourceUrl: null },
   ];
 };
 

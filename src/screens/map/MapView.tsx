@@ -6,6 +6,8 @@ import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import { useApp } from "@/context/AppContext";
 import { assetUrl } from "@/lib/assets";
 import { isFeatured, usePlaces, type Place } from "@/data/places";
+import { useNav } from "@/lib/navStore";
+import { useVisit } from "@/lib/visitStore";
 
 const ml = ((maplibre as any).default ?? maplibre) as typeof maplibre;
 
@@ -129,10 +131,39 @@ function ensurePlaceLayers(map: maplibre.Map, onPick: (id: string) => void) {
   map.on("mouseleave", "gg-pins", () => { map.getCanvas().style.cursor = ""; });
 }
 
-// route: 길 안내 선은 route.mjs 연결 후에 그림(지금은 지도만 보임)
+const ROUTE_SRC = "gg-route", STOPS_SRC = "gg-route-stops", ME_SRC = "gg-me";
+const emptyFc = { type: "FeatureCollection", features: [] };
+
+// 길 안내용 레이어: 경로 선 + 곳 번호 + 내 위치 점 (핀보다 위에 그려짐)
+function ensureRouteLayers(map: maplibre.Map) {
+  if (map.getSource(ROUTE_SRC)) return;
+  const primary = cssVar("--color-primary", "#BF1F1C");
+  map.addSource(ROUTE_SRC, { type: "geojson", data: emptyFc as any });
+  map.addSource(STOPS_SRC, { type: "geojson", data: emptyFc as any });
+  map.addSource(ME_SRC, { type: "geojson", data: emptyFc as any });
+  map.addLayer({ id: "gg-route-line", type: "line", source: ROUTE_SRC, layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": primary, "line-width": 5, "line-opacity": 0.9 } } as any);
+  map.addLayer({
+    id: "gg-route-stops", type: "circle", source: STOPS_SRC,
+    paint: {
+      "circle-radius": ["case", ["get", "current"], 13, 10],
+      "circle-color": ["case", ["get", "current"], primary, cssVar("--color-ink", "#262626")],
+      "circle-stroke-color": "#ffffff", "circle-stroke-width": 2,
+    },
+  } as any);
+  map.addLayer({
+    id: "gg-route-nums", type: "symbol", source: STOPS_SRC,
+    layout: { "text-field": ["get", "n"], "text-font": ["Regular"], "text-size": 11, "text-allow-overlap": true, "text-ignore-placement": true },
+    paint: { "text-color": "#ffffff" },
+  } as any);
+  map.addLayer({ id: "gg-me-dot", type: "circle", source: ME_SRC, paint: { "circle-radius": 7, "circle-color": "#1c7ed6", "circle-stroke-color": "#ffffff", "circle-stroke-width": 3 } } as any);
+}
+
+// route = true 면 길 안내 선을 그림 (T-16). 아니면 핀만 보이는 일반 지도
 export function MapView({ route = false }: { route?: boolean }) {
-  void route;
   const { goToPlace } = useApp();
+  const nav = useNav();
+  const visit = useVisit();
+  const fitKey = useRef("");
   const pickRef = useRef(goToPlace);
   pickRef.current = goToPlace;
 
@@ -198,6 +229,34 @@ export function MapView({ route = false }: { route?: boolean }) {
       features: shown.map(toFeature),
     } as any);
   }, [status, places]);
+
+  // 경로 선·곳 번호·내 위치 데이터 넣기
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!route || status !== "ready" || !map) return;
+    ensureRouteLayers(map);
+    const src = (id: string) => map.getSource(id) as maplibre.GeoJSONSource | undefined;
+    const pos = visit.position ? [visit.position.lng, visit.position.lat] : null;
+    src(ROUTE_SRC)?.setData(nav.leg ? { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: nav.leg.coords } } as any : emptyFc as any);
+    src(STOPS_SRC)?.setData({
+      type: "FeatureCollection",
+      features: nav.steps.map((s, i) => ({ type: "Feature", properties: { n: String(i + 1), current: i === nav.idx }, geometry: { type: "Point", coordinates: s.pin } })),
+    } as any);
+    src(ME_SRC)?.setData(pos ? { type: "FeatureCollection", features: [{ type: "Feature", properties: {}, geometry: { type: "Point", coordinates: pos } }] } as any : emptyFc as any);
+  }, [route, status, nav.leg, nav.steps, nav.idx, visit.position]);
+
+  // 안내를 시작할 때 코스 전체가 보이게 한 번 맞춤
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!route || status !== "ready" || !map || nav.steps.length === 0) return;
+    const key = nav.steps.map((s) => s.id).join(",");
+    if (fitKey.current === key) return;
+    fitKey.current = key;
+    const pts = [...nav.steps.map((s) => s.pin), ...(nav.plan ? [nav.plan.start] : [])];
+    const b = new ml.LngLatBounds(pts[0], pts[0]);
+    pts.forEach((p) => b.extend(p));
+    map.fitBounds(b, { padding: { top: 130, bottom: 150, left: 40, right: 40 }, maxZoom: 18, duration: 600 });
+  }, [route, status, nav.steps, nav.plan]);
 
   return <div style={{ position: "absolute", inset: 0, zIndex: 0, background: "var(--color-map)" }}>
     <div ref={box} style={{ position: "absolute", inset: 0 }} />

@@ -1,12 +1,14 @@
 import { Icon } from "@/components/ui/Icon";
 import type { IconName, ScreenId } from "@/types";
 import { useApp } from "@/context/AppContext";
+import { useOnline } from "@/lib/online";
 
 export function Tabs() {
   const { screen, go } = useApp();
+  const online = useOnline();
   const tabs: [string, IconName, ScreenId][] = [["Map", "map", "T-10"], ["Scan", "camera", "T-20"], ["Live Tour", "tour", "T-30"], ["Ask", "search", "T-40"]];
   const active = screen.startsWith("T-2") || screen === "S-05" ? "Scan" : screen.startsWith("T-3") || screen === "S-02" || screen === "S-04" ? "Live Tour" : screen.startsWith("T-4") || screen === "S-06" ? "Ask" : "Map";
-  const disabled = screen === "S-01";
+  const disabled = screen === "S-01" || !online; // 오프라인이면 Live Tour, Ask 는 막음
   return <nav className="tabs">
     {tabs.map(([label, icon, id]) => {
       const isDisabled = disabled && (label === "Live Tour" || label === "Ask");

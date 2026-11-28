@@ -20,6 +20,7 @@ export type VisitSnapshot = {
   accuracy: number | null;                       // 마지막 위치의 정확도(m)
   visited: string[];                             // 스탬프를 받은 장소 id (앱을 껐다 켜도 유지)
   arrival: { poiId: string; t: number } | null;  // 도착 알림 대기 (T-13 에서 사용)
+  position: { lat: number; lng: number } | null;
 };
 
 const KEY = "gunggeum.visit";
@@ -31,7 +32,7 @@ function readSaved(): Saved {
   try { return JSON.parse(localStorage.getItem(KEY) ?? "{}") as Saved; } catch { return {}; }
 }
 
-let snap: VisitSnapshot = { tracking: "off", permission: "unknown", weakGps: false, accuracy: null, visited: readSaved().visited ?? [], arrival: null };
+let snap: VisitSnapshot = { tracking: "off", permission: "unknown", weakGps: false, accuracy: null, visited: readSaved().visited ?? [], position: null, arrival: null };
 const listeners = new Set<() => void>();
 function set(patch: Partial<VisitSnapshot>) {
   snap = { ...snap, ...patch };
@@ -100,6 +101,7 @@ function persist() {
 
 function handleFix(fix: JudgeFix) {
   noteAccuracy(fix.accuracy);
+  if (!snap.position || Math.hypot((fix.lat - snap.position.lat) * 111000, (fix.lng - snap.position.lng) * 88000) > 3) set({ position: { lat: fix.lat, lng: fix.lng } });
   if (!judge) return;
   const events = judge.update(fix);
   if (events.length === 0) return;
