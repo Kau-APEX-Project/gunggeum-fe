@@ -1,0 +1,23 @@
+/* 오디오 가이드 가사 화면 + 가사가 있을 때의 하단 미니 플레이어 */
+
+/* 미니 플레이어: 제목 아래에 지금 읽는 문장 한 줄을 보여 주고, 누르면 가사 화면이 열림 */
+.audio-player.has-lyrics { padding-top: 6px; padding-bottom: 6px; }
+.audio-player.has-lyrics .audio-track { margin-top: 3px; }
+.audio-open { display: block; width: 100%; min-width: 0; padding: 0; text-align: left; color: inherit; cursor: pointer; }
+.audio-open strong, .audio-open small { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.audio-open strong { font-size: 11px; line-height: 1.25; }
+.audio-open small { margin-top: 1px; font-size: 10px; line-height: 1.3; color: var(--color-line); }
+
+/* 가사 화면: 상단 바와 하단 플레이어·탭 사이를 덮음 */
+.lyrics { position: absolute; z-index: 29; left: 0; right: 0; top: 58px; bottom: 118px; display: flex; flex-direction: column; background: var(--color-ink); color: var(--color-on-dark); }
+.lyrics-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 14px 16px 4px; }
+.lyrics-head strong { font-size: 14px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.lyrics-head button { flex: none; padding: 4px; color: var(--color-on-dark); }
+.lyrics-scroll { position: relative; flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; padding: 0 16px;
+  -webkit-mask-image: linear-gradient(transparent, #000 12%, #000 88%, transparent); mask-image: linear-gradient(transparent, #000 12%, #000 88%, transparent); }
+.lyrics-scroll::-webkit-scrollbar { display: none; }
+.lyrics-scroll ul { margin: 0; padding: 38% 0; list-style: none; } /* 위아래 여백: 첫·마지막 문장도 가운데까지 올라올 수 있게 */
+.lyrics-line { display: block; width: 100%; padding: 9px 0; text-align: left; font-size: 17px; line-height: 1.45; font-weight: 500; color: rgba(251, 251, 251, .55); cursor: pointer; }
+.lyrics-line[aria-current="true"] { color: var(--color-on-dark); font-weight: 700; }
+.lyrics-line:focus-visible, .lyrics-head button:focus-visible, .audio-open:focus-visible { outline: 2px solid var(--color-on-dark); outline-offset: 2px; border-radius: 4px; }
+@media (prefers-reduced-motion: no-preference) { .lyrics-line { transition: color .25s; } }
