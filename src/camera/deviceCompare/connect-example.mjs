@@ -17,7 +17,7 @@ export async function createCameraFeature({model='weightfp16',baseUrl,
     expectedHash:config.sha256,modelVersion:config.modelVersion,onState,
     onMeasurement:r=>preparations.push({...r,recorded_at:new Date().toISOString()})});
   const showError=e=>{if(!['SUPERSEDED','DISPOSED'].includes(e.code))onError(e.code??'ERROR',e.message);};
-  function snapshot(){return {schema_version:1,instance_id:instanceId,date:new Date().toISOString(),
+  function snapshot(){return {schema_version:1,measurement_revision:'20261127-http',instance_id:instanceId,date:new Date().toISOString(),
     model:config.modelVersion,model_sha256:config.sha256,runtime_version:providedOrt?'frontend_injected_unknown':'1.30.0',
     user_agent:navigator.userAgent,hardwareConcurrency:navigator.hardwareConcurrency,
     secure_context:globalThis.isSecureContext,origin:location.origin,context:{...context},
@@ -25,7 +25,7 @@ export async function createCameraFeature({model='weightfp16',baseUrl,
     display_metric:'two requestAnimationFrame callbacks after FE confirms candidate DOM commit; paint opportunity estimate, not hardware display timestamp',
     preparations:structuredClone(preparations),records:structuredClone(records)};}
   return {
-    async enter(){entryTime=performance.now();try{const s=await camera.prepare();preparations.push({type:'screen_entry',screen_to_ready_ms:performance.now()-entryTime,provider:s.provider});return s;}catch(e){preparations.push({type:'preparation_error',code:e.code,message:e.message});showError(e);}},
+    async enter(){entryTime=performance.now();try{const s=await camera.prepare();preparations.push({type:'screen_entry',screen_to_ready_ms:performance.now()-entryTime,provider:s.provider});return s;}catch(e){preparations.push({type:'preparation_error',code:e.code,message:e.message,stage:e.stage,detail:e.detail??String(e.cause?.message??e.message),fallbacks:e.fallbacks??[]});showError(e);throw e;}},
     async selectPhoto(file,{trialId='',source='unknown',expectedName=null,startedAt=performance.now()}={}){
       if(closed)throw Error('Disposed');
       const call=++sequence,start=performance.now(),epoch=visibilityEpoch;
@@ -46,7 +46,7 @@ export async function createCameraFeature({model='weightfp16',baseUrl,
         record.status='result_ready';latest={...r,record_id:record.record_id};
         onCandidates(r.candidates,{recordId:record.record_id,provider:r.provider,model:config.modelVersion});
         return latest;
-      }catch(e){record.status='failed';record.code=e.code??'ERROR';record.error_ms=performance.now()-t;record.visibility_changed=visibilityEpoch!==epoch;showError(e);return null;}
+      }catch(e){record.status='failed';record.code=e.code??'ERROR';record.message=e.message;record.stage=e.stage;record.detail=e.detail??String(e.cause?.message??e.message);record.error_ms=performance.now()-t;record.visibility_changed=visibilityEpoch!==epoch;showError(e);return null;}
     },
     async markCandidatesRendered(recordId){
       const r=records.find(x=>x.record_id===recordId);

@@ -1,3 +1,4 @@
+import {hashModel} from './hash.mjs';
 import {preprocess} from './preprocess.mjs';
 import {RecognitionError, validateMapping, formatResult} from './results.mjs';
 
@@ -6,7 +7,7 @@ export const MODEL_SHA256 = '8257972fe0edb4a5aeb4b1bfdadd1578e5f4bc03cd981f73929
 
 export function createCameraRecognizer({ort, modelUrl, mappingUrl, wasmPaths,
   expectedHash=MODEL_SHA256, modelVersion='exp_field_002_weightint8', onState=()=>{}, onMeasurement=()=>{},
-  fetchImpl=globalThis.fetch, preprocessImage=preprocess,
+  fetchImpl=globalThis.fetch, preprocessImage=preprocess, hashModelImpl=hashModel,
   hasWebGPU=async()=>Boolean(await globalThis.navigator?.gpu?.requestAdapter()),
   maxBytes=20*1024*1024}) {
   let session=null, mapping=null, bytes=null, provider=null, preparation=null;
@@ -34,7 +35,7 @@ export function createCameraRecognizer({ort, modelUrl, mappingUrl, wasmPaths,
     return performance.now()-t;
   }
   async function initialize() {
-    const start=performance.now(), stages={};
+    const start=performance.now(), stages={};let stage='mapping_download';
     try {
       ort.env.wasm.numThreads=1;
       if(wasmPaths)ort.env.wasm.wasmPaths=wasmPaths;
@@ -42,25 +43,26 @@ export function createCameraRecognizer({ort, modelUrl, mappingUrl, wasmPaths,
       let t=performance.now();
       mapping=await(await fetchOK(mappingUrl)).json();validateMapping(mapping,modelVersion);stages.mapping_fetch_ms=performance.now()-t;
       if(!bytes) {
-        t=performance.now();const candidate=await(await fetchOK(modelUrl)).arrayBuffer();stages.model_fetch_ms=performance.now()-t;t=performance.now();
-        const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',candidate)),v=>v.toString(16).padStart(2,'0')).join('');
+        stage='model_download';t=performance.now();const candidate=await(await fetchOK(modelUrl)).arrayBuffer();stages.model_fetch_ms=performance.now()-t;t=performance.now();
+        stage='model_hash';const {digest,method}=await hashModelImpl(candidate);stages.hash_method=method;
         if(digest!==expectedHash)throw error('MODEL_MISMATCH','모델 파일 버전을 확인하세요.');
         bytes=candidate;stages.hash_ms=performance.now()-t;
       }
-      live();emit('initializing');
+      live();emit('initializing');stage='webgpu_session';
       try {
         if(!await hasWebGPU())throw error('WEBGPU_UNAVAILABLE','WebGPU를 사용할 수 없습니다.');
         stages.session_create_ms=await create('webgpu');
       } catch(e) {
         live();fallbacks.push({stage:'initialization',reason:String(e)});emit('fallback',{stage:'initialization',reason:String(e)});
-        stages.session_create_ms=await create('wasm');
+        stage='wasm_session';stages.session_create_ms=await create('wasm');
       }
       live();preparationInfo={...stages,total_ms:performance.now()-start,provider,fallbacks:[...fallbacks]};measure({type:'preparation',...preparationInfo});emit('ready',{preparation_ms:preparationInfo.total_ms});
       return {...state};
     } catch(e) {
       await release();
       if(!closed)emit('error',{code:e.code||'PREPARE_FAILED'});
-      throw e.code?e:error('PREPARE_FAILED','모델을 준비하지 못했습니다.',e);
+      const failure=e.code?e:error('PREPARE_FAILED','모델을 준비하지 못했습니다.',e);
+      failure.stage=stage;failure.detail=String(e.message??e);failure.fallbacks=[...fallbacks];throw failure;
     }
   }
   function prepare() {
